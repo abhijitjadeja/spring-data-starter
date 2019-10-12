@@ -1,15 +1,19 @@
 package starter;
 
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.springframework.context.annotation.*;
+import org.springframework.data.jdbc.repository.config.AbstractJdbcConfiguration;
+import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import freemarker.cache.ClassTemplateLoader;
-
+import org.springframework.beans.factory.annotation.*;
 @Configuration
-public class TestConfig {
+@EnableJdbcRepositories
+public class TestConfig  extends AbstractJdbcConfiguration{
 
     @Bean("applicationDataSource")
     public DataSource dataSource() {
@@ -19,9 +23,16 @@ public class TestConfig {
     }
 
     @Bean("applicationNamedParameterJdbcTemplate")
-    @Resource(name = "applicationDataSource")
+    @Autowired
+    @Qualifier("applicationDataSource")
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate(DataSource pdrDataSource) {
         return new NamedParameterJdbcTemplate(pdrDataSource);
+    }
+
+    @Bean("transactionManager")
+    @Autowired
+    public PlatformTransactionManager txnManager(DataSource dataSource){
+        return new DataSourceTransactionManager(dataSource);
     }
 
     @Bean("freemarkerTemplateConfiguraton")
