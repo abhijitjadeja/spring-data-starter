@@ -1,33 +1,20 @@
 package starter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.jdbc.JdbcTestUtils.countRowsInTableWhere;
-import static starter.AutomationTestUtils.assertEqualsInMap;
-import static starter.AutomationTestUtils.populateTemplate;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.*;
-import org.custommonkey.xmlunit.Diff;
-import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvFileSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.xml.sax.SAXException;
+import org.springframework.transaction.annotation.Transactional;
 
-import freemarker.template.TemplateException;
-
-@SpringJUnitConfig(TestConfig.class)
+@SpringJUnitConfig(ApplicationConfig.class)
+@Transactional
 @SqlConfig(dataSource = "applicationDataSource")
 class StarterTests {
 	@Autowired
@@ -37,22 +24,38 @@ class StarterTests {
 	@Autowired
 	PersonRepository repository;
 
+	@Autowired
+	AddressRepository addressRepository;
+
 	@Test
-	@Sql("/sql/test.sql")
-	@DisplayName("Test Spring Data Insert")
-	void testSpringDataJdbc()  {
-		Person p = new Person(123l,"John1","Doe2",2003);
-		repository.save(p);
+	@Sql("/sql/person.sql")
+	@DisplayName("Test Spring Data Insert - auto increment id")
+	void testSpringDataJdbcAutoIncrement() {
+		Person p = new Person("John1", "Doe2", 2003);
+		p = repository.save(p);
+		assertNotNull(p);
+		for (Person p1 : repository.findAll()) {
+			System.out.println(p1.id + " " + p1.firstName + " " + p1.lastName);
+		}
 
-		int rows = countRowsInTableWhere(pdrNamedParameterJdbcTemplate.getJdbcTemplate(), "PERSON", "PERSON_ID=123");
+		Person person = repository.findById(p.id).orElseThrow(() -> new RuntimeException("no person"));
 
-		assertEquals(1, rows);
+		assertEquals("John1", person.firstName);
 
-		Person person =repository.findById(123l).orElseThrow(()-> new RuntimeException("no person"));
-		
-       
-		assertEquals("John1",person.firstName);
-		
-		
+	}
+
+	@Test
+	@Sql("/sql/address.sql")
+	@DisplayName("Test Spring Data Insert - assigned id with persistable")
+	void testSpringDataJdbcAssignedId() {
+		Address a = new Address(2l, "productivity road", "alkapuri", "39020");
+		a.crudOperation=Operation.CREATE;
+		a = addressRepository.save(a);
+		assertNotNull(a);
+
+		Address addr = addressRepository.findById(a.id).orElseThrow(() -> new RuntimeException("no address"));
+
+		assertEquals("productivity road", addr.line1);
+
 	}
 }

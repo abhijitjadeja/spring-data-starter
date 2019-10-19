@@ -7,15 +7,14 @@ public class Person {
 
     @Id 
 	@Column("PERSON_ID")
-	private Long id;
+	Long id;
 	@Column("FST_NM")
 	String firstName;
 	@Column("LST_NM")
 	String lastName;
     @Column("EMP_ID")
 	Integer employeeId; 
-	public Person(Long id,String firstName,String lastName,Integer employeeId) {
-		this.id = id;
+	public Person(String firstName,String lastName,Integer employeeId) {
 		this.firstName=firstName;
 		this.lastName=lastName;
 		this.employeeId=employeeId;
