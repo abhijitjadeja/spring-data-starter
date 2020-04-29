@@ -27,6 +27,9 @@ class StarterTests {
 	@Autowired
 	AddressRepository addressRepository;
 
+	@Autowired
+	InsuranceRepository insuranceRepository;
+
 	@Test
 	@Sql("/sql/person.sql")
 	@DisplayName("Test Spring Data Insert - auto increment id")
@@ -49,7 +52,7 @@ class StarterTests {
 	@DisplayName("Test Spring Data Insert - assigned id with persistable")
 	void testSpringDataJdbcAssignedId() {
 		Address a = new Address(2l, "productivity road", "alkapuri", "39020");
-		a.crudOperation=Operation.CREATE;
+		a.setNew();
 		a = addressRepository.save(a);
 		assertNotNull(a);
 
@@ -58,4 +61,23 @@ class StarterTests {
 		assertEquals("productivity road", addr.line1);
 
 	}
+
+	@Test
+	@Sql("/sql/insurance.sql")
+	@DisplayName("Test Spring data insert - assigned text id with persistable")
+    void testSpringDataJdbcAssignedTextId(){
+		Insurance i = new Insurance("XYZ","Insurance name");
+		i.setNew();
+		i = insuranceRepository.save(i);
+		assertNotNull(i);
+		Insurance insurance = insuranceRepository.findById("XYZ").orElseThrow(()-> new RuntimeException("no insurance"));
+		assertEquals("Insurance name",insurance.name);
+		insurance.name="Changed Name";
+		insurance = insuranceRepository.save(insurance);
+		assertNotNull(insurance);
+		Insurance insurance2 = insuranceRepository.findById("XYZ").orElseThrow(()-> new RuntimeException("no insurance"));
+		assertEquals("Changed Name",insurance2.name);
+	
+	}
+
 }
